@@ -160,7 +160,11 @@ if st.session_state.get("current_index", 0) >= len(filtered):
 
 # --- Show current question ---
 if st.session_state.get("current_index", 0) < len(filtered):
+    if "current_index" not in st.session_state:
+        st.stop()
+
     q = filtered.iloc[st.session_state.current_index]
+
     st.markdown(f"#### {q['question']}")
     if isinstance(q.get("decoded_image"), dict) and "bytes" in q["decoded_image"]:
         st.image(q["decoded_image"]["bytes"])
