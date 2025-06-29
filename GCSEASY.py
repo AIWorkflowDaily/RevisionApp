@@ -45,6 +45,8 @@ def gtts_text_to_speech(text, lang='en'):
 # --- CONFIG ---
 st.set_page_config(page_title="GCSE Maths App", layout="centered")
 openai.api_key = st.secrets["openai"]["api_key"]
+st.write("🔑 API key loaded:", bool(st.secrets.get("openai", {}).get("api_key")))
+
 
 # --- DATA LOADING ---
 @st.cache_data
