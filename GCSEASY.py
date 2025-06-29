@@ -13,6 +13,7 @@ import re
 import io
 import requests
 from gtts import gTTS
+from datetime import datetime
 
 # --- Helper Functions ---
 def clean_tts_text(text):
@@ -42,12 +43,16 @@ def gtts_text_to_speech(text, lang='en'):
         gTTS(text=text, lang=lang).save(fp.name)
         return fp.name
 
+def format_duration(seconds):
+    minutes = int(seconds // 60)
+    secs = int(seconds % 60)
+    return f"{minutes}m {secs}s"
+
 # --- CONFIG ---
 st.set_page_config(page_title="GCSE Maths App", layout="centered")
 openai.api_key = st.secrets["openai"]["api_key"]
 if st.secrets.get("show_debug", False):
     st.write("🔑 API key loaded:", bool(openai.api_key))
-
 
 # --- DATA LOADING ---
 @st.cache_data
@@ -65,6 +70,17 @@ def load_data():
     return df
 
 data = load_data()
+
+# --- FILTER DATA ---
+filtered = data.copy()
+if "selected_level" in st.session_state and "selected_subject" in st.session_state:
+    level = st.session_state.selected_level
+    subject = st.session_state.selected_subject
+    if level != "All":
+        filtered = filtered[filtered["level"].astype(str).str.lower() == level.lower()]
+    if subject != "All":
+        filtered = filtered[filtered["subject"].astype(str).str.lower() == subject.lower()]
+    filtered = filtered.sample(frac=1, random_state=42).reset_index(drop=True)
 
 # --- UI ELEMENTS ---
 st.title("🧠 GCSE Maths App")
@@ -94,47 +110,18 @@ if "user_name" not in st.session_state:
             "help_response": None
         })
         st.rerun()
-else:
-    total_elapsed = int(time.time() - st.session_state.quiz_start_time)
-    st.markdown(f"### ⏱ Total Time: {total_elapsed // 60:02}:{total_elapsed % 60:02}")
-    filtered = data.copy()
-    level, subject = st.session_state.selected_level, st.session_state.selected_subject
-    if level != "All":
-        filtered = filtered[filtered["level"].astype(str).str.lower() == level.lower()]
-    if subject != "All":
-        filtered = filtered[filtered["subject"].astype(str).str.lower() == subject.lower()]
-    filtered = filtered.sample(frac=1, random_state=42).reset_index(drop=True)
-    if filtered.empty:
-        st.warning("No questions available for this level and subject. Please choose different filters.")
-    if st.button("Restart"):
-        st.session_state.clear()
-        st.rerun()
-    st.stop()
-
 
 if st.session_state.get("current_index", 0) >= len(filtered):
     st.success("✅ Quiz Finished!")
-
-    from datetime import datetime
-
-    def format_duration(seconds):
-        minutes = int(seconds // 60)
-        secs = int(seconds % 60)
-        return f"{minutes}m {secs}s"
-
     df_results = pd.DataFrame(st.session_state.results)
 
     if not df_results.empty:
-        # Add formatted time column
         df_results["time_taken_readable"] = df_results["time_taken"].apply(format_duration)
-
         avg_times = df_results.groupby("level")["time_taken"].mean()
         st.bar_chart(avg_times)
-
         counts = df_results.groupby(["level", "correct"]).size().unstack(fill_value=0)
         st.bar_chart(counts)
 
-        # Convert full record to dict with readable time for JSON export
         results_with_readable = df_results.to_dict(orient="records")
 
         def convert_to_builtin_types(obj):
@@ -160,7 +147,6 @@ if st.session_state.get("current_index", 0) >= len(filtered):
             mime="application/json"
         )
 
-    if st.button("Restart"): 
+    if st.button("Restart"):
         st.session_state.clear()
         st.rerun()
-
