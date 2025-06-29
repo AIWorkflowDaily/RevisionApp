@@ -67,7 +67,7 @@ openai.api_key = st.secrets.get("openai_api_key", "")
 
 @st.cache_data
 def load_data():
-    url = "https://drive.google.com/uc?export=download&id=11bScYwD9ffskHRAekyv1d13TESovnG2F"
+    url = "https://drive.google.com/uc?export=download&id=1NGilcKWzaVdi2S6PbcVOczI3qCWswbcB"
     response = requests.get(url)
     response.raise_for_status()  # will raise error if download fails
     buffer = io.BytesIO(response.content)
