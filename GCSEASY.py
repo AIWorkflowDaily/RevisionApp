@@ -112,7 +112,7 @@ else:
     st.stop()
 
 
-if st.session_state.current_index >= len(filtered):
+if st.session_state.get("current_index", 0) >= len(filtered):
     st.success("✅ Quiz Finished!")
 
     from datetime import datetime
