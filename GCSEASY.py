@@ -71,17 +71,6 @@ def load_data():
 
 data = load_data()
 
-# --- FILTER DATA ---
-filtered = data.copy()
-if "selected_level" in st.session_state and "selected_subject" in st.session_state:
-    level = st.session_state.selected_level
-    subject = st.session_state.selected_subject
-    if level != "All":
-        filtered = filtered[filtered["level"].astype(str).str.lower() == level.lower()]
-    if subject != "All":
-        filtered = filtered[filtered["subject"].astype(str).str.lower() == subject.lower()]
-    filtered = filtered.sample(frac=1, random_state=42).reset_index(drop=True)
-
 # --- UI ELEMENTS ---
 st.title("🧠 GCSE Maths App")
 read_aloud = st.sidebar.checkbox("🔊 Read Aloud Help Messages", value=True)
@@ -110,6 +99,24 @@ if "user_name" not in st.session_state:
             "help_response": None
         })
         st.rerun()
+
+# --- FILTER DATA ---
+filtered = data.copy()
+if "selected_level" in st.session_state and "selected_subject" in st.session_state:
+    level = st.session_state.selected_level
+    subject = st.session_state.selected_subject
+    if level != "All":
+        filtered = filtered[filtered["level"].astype(str).str.lower() == level.lower()]
+    if subject != "All":
+        filtered = filtered[filtered["subject"].astype(str).str.lower() == subject.lower()]
+    filtered = filtered.sample(frac=1, random_state=42).reset_index(drop=True)
+
+    if filtered.empty:
+        st.warning("No questions available for this level and subject. Please choose different filters.")
+        if st.button("Restart"):
+            st.session_state.clear()
+            st.rerun()
+        st.stop()
 
 if st.session_state.get("current_index", 0) >= len(filtered):
     st.success("✅ Quiz Finished!")
