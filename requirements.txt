@@ -1,0 +1,7 @@
+streamlit
+openai
+gtts
+pyttsx3
+matplotlib
+pandas
+numpy
