@@ -12,6 +12,8 @@ from gtts import gTTS
 import tempfile
 import os
 import re
+import io
+import requests
 
 # --- TTS CLEANING ---
 def clean_tts_text(text):
@@ -65,7 +67,12 @@ openai.api_key = st.secrets.get("openai_api_key", "")
 
 @st.cache_data
 def load_data():
-    df = pd.read_parquet("C:/Users/Bevan/Documents/GCSE/DATASET/mathquestions.parquet")
+    url = "https://drive.google.com/uc?export=download&id=11bScYwD9ffskHRAekyv1d13TESovnG2F"
+    response = requests.get(url)
+    response.raise_for_status()  # will raise error if download fails
+    buffer = io.BytesIO(response.content)
+    df = pd.read_parquet(buffer)
+
     def parse_options(x):
         if isinstance(x, list): return x
         try: return ast.literal_eval(x)
